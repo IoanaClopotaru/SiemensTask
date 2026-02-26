@@ -1,0 +1,101 @@
+classDiagram
+    class Customer {
+      +int customerId
+      +String name
+      +String email
+      +String phone
+      +MembershipType membershipType
+      +int loyaltyPoints
+      +earnPoints(amountSpent: decimal) void
+      +canRedeem(requiredPoints: int) bool
+      +redeemPoints(points: int) void
+    }
+
+    class MembershipType {
+    }
+    <<enumeration>> MembershipType
+    MembershipType : REGULAR
+    MembershipType : GOLD
+
+    class CoffeeShop {
+      +int shopId
+      +String name
+      +String address
+      +getDailySales(date: DateTime) decimal
+      +getOrders(date: DateTime) List~Order~
+    }
+
+    class Barista {
+      +int baristaId
+      +String name
+      +prepareOrder(order: Order) void
+      +markOrderCompleted(order: Order) void
+    }
+
+    class Order {
+      +int orderId
+      +DateTime timestamp
+      +decimal totalPrice
+      +OrderStatus status
+      +int loyaltyPointsEarned
+      +int loyaltyPointsRedeemed
+      +addItem(item: OrderItem) void
+      +calculateTotal() decimal
+      +applyLoyaltyRedemption(points: int) void
+      +finalize() void
+    }
+
+    class OrderStatus {
+    }
+    <<enumeration>> OrderStatus
+    OrderStatus : PENDING
+    OrderStatus : IN_PREPARATION
+    OrderStatus : COMPLETED
+    OrderStatus : CANCELLED
+
+    class OrderItem {
+      +int orderItemId
+      +Size size
+      +int quantity
+      +decimal unitPrice
+      +decimal lineTotal
+      +addExtra(extra: Extra) void
+      +calculateLineTotal() decimal
+    }
+
+    class Size {
+    }
+    <<enumeration>> Size
+    Size : SMALL
+    Size : MEDIUM
+    Size : LARGE
+
+    class Beverage {
+      +int beverageId
+      +String name
+      +getBasePrice(size: Size) decimal
+    }
+    <<abstract>> Beverage
+
+    class Espresso
+    class Latte
+    class Cappuccino
+
+    class Extra {
+      +int extraId
+      +String name
+      +decimal price
+      +getPrice() decimal
+    }
+
+    Customer "0..1" --> "0..*" Order : places
+    CoffeeShop "1" o-- "0..*" Barista : employs
+    CoffeeShop "1" o-- "0..*" Order : receives
+    Barista "1" --> "0..*" Order : prepares
+    Order "1" o-- "1..*" OrderItem : contains
+    OrderItem "1" --> "1" Beverage : for
+    OrderItem "1" o-- "0..*" Extra : has
+
+    Beverage <|-- Espresso
+    Beverage <|-- Latte
+    Beverage <|-- Cappuccino

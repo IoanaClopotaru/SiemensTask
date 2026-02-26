@@ -1,0 +1,73 @@
+erDiagram
+    CUSTOMER {
+      int customer_id PK
+      string name
+      string email
+      string phone
+      string membership_type
+      int loyalty_points
+    }
+
+    COFFEE_SHOP {
+      int shop_id PK
+      string name
+      string address
+    }
+
+    BARISTA {
+      int barista_id PK
+      int shop_id FK
+      string name
+    }
+
+    BEVERAGE {
+      int beverage_id PK
+      string name
+      string type
+      decimal price_small
+      decimal price_medium
+      decimal price_large
+    }
+
+    EXTRA {
+      int extra_id PK
+      string name
+      decimal price
+    }
+
+    "ORDER" {
+      int order_id PK
+      int customer_id FK
+      int shop_id FK
+      int barista_id FK
+      datetime order_timestamp
+      decimal total_price
+      int loyalty_points_earned
+      int loyalty_points_redeemed
+      string status
+    }
+
+    ORDER_ITEM {
+      int order_item_id PK
+      int order_id FK
+      int beverage_id FK
+      string size
+      int quantity
+      decimal unit_price
+      decimal line_total
+    }
+
+    ORDER_ITEM_EXTRA {
+      int order_item_id FK
+      int extra_id FK
+      decimal extra_price
+    }
+
+    CUSTOMER ||--o{ "ORDER" : places
+    COFFEE_SHOP ||--o{ BARISTA : employs
+    COFFEE_SHOP ||--o{ "ORDER" : receives
+    BARISTA ||--o{ "ORDER" : prepares
+    "ORDER" ||--|{ ORDER_ITEM : contains
+    BEVERAGE ||--o{ ORDER_ITEM : used_for
+    ORDER_ITEM ||--o{ ORDER_ITEM_EXTRA : has
+    EXTRA ||--o{ ORDER_ITEM_EXTRA : used_in
