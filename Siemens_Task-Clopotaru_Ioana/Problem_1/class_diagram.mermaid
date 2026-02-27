@@ -1,47 +1,70 @@
 classDiagram
     class Customer {
-      +int customerId
-      +String name
-      +String email
-      +String phone
-      +MembershipType membershipType
-      +int loyaltyPoints
+      -int customerId
+      -String name
+      -String email
+      -String phone
+      +getLoyaltyPoints() int
       +earnPoints(amountSpent: decimal) void
       +canRedeem(requiredPoints: int) bool
       +redeemPoints(points: int) void
+      +getPointsPerEuro() int
+    }
+    note for Customer "getLoyaltyPoints() = sum(EARNED) - sum(REDEEMED) from LoyaltyTransaction"
+    <<abstract>> Customer
+
+    class RegularCustomer {
+      +getPointsPerEuro() int
     }
 
-    class MembershipType {
+    class GoldCustomer {
+      +getPointsPerEuro() int
     }
-    <<enumeration>> MembershipType
-    MembershipType : REGULAR
-    MembershipType : GOLD
+
+    class PointTransactionType {
+    }
+    <<enumeration>> PointTransactionType
+    PointTransactionType : EARNED
+    PointTransactionType : REDEEMED
+
+    class LoyaltyTransaction {
+      -int transactionId
+      -Customer customer
+      -Order order
+      -PointTransactionType type
+      -int points
+      -DateTime timestamp
+    }
 
     class CoffeeShop {
-      +int shopId
-      +String name
-      +String address
+      -int shopId
+      -String name
+      -String address
       +getDailySales(date: DateTime) decimal
       +getOrders(date: DateTime) List~Order~
     }
 
     class Barista {
-      +int baristaId
-      +String name
+      -int baristaId
+      -String name
       +prepareOrder(order: Order) void
       +markOrderCompleted(order: Order) void
     }
 
     class Order {
-      +int orderId
-      +DateTime timestamp
-      +decimal totalPrice
-      +OrderStatus status
-      +int loyaltyPointsEarned
-      +int loyaltyPointsRedeemed
+      -int orderId
+      -Customer customer
+      -CoffeeShop coffeeShop
+      -Barista barista
+      -DateTime timestamp
+      -decimal subtotal
+      -decimal discountAmount
+      -decimal finalTotal
+      -OrderStatus status
+      -List~OrderItem~ items
       +addItem(item: OrderItem) void
       +calculateTotal() decimal
-      +applyLoyaltyRedemption(points: int) void
+      +redeemForFreeDrink(freeItem: OrderItem) void
       +finalize() void
     }
 
@@ -54,14 +77,25 @@ classDiagram
     OrderStatus : CANCELLED
 
     class OrderItem {
-      +int orderItemId
-      +Size size
-      +int quantity
-      +decimal unitPrice
-      +decimal lineTotal
-      +addExtra(extra: Extra) void
+      -int orderItemId
+      -Beverage beverage
+      -Size size
+      -int quantity
+      -decimal unitPrice
+      -decimal lineTotal
+      +addExtra(extra: Extra, quantity: int) void
       +calculateLineTotal() decimal
     }
+
+    class OrderItemExtra {
+      -int orderItemExtraId
+      -OrderItem orderItem
+      -Extra extra
+      -int quantity
+      -decimal unitPrice
+      -decimal lineTotal
+    }
+    note for OrderItemExtra "unitPrice/lineTotal = snapshot at order time"
 
     class Size {
     }
@@ -70,32 +104,46 @@ classDiagram
     Size : MEDIUM
     Size : LARGE
 
+    class BeverageName {
+    }
+    <<enumeration>> BeverageName
+    BeverageName : ESPRESSO
+    BeverageName : LATTE
+    BeverageName : CAPPUCCINO
+
     class Beverage {
-      +int beverageId
-      +String name
+      -int beverageId
+      -BeverageName beverageName
       +getBasePrice(size: Size) decimal
     }
-    <<abstract>> Beverage
 
-    class Espresso
-    class Latte
-    class Cappuccino
-
-    class Extra {
-      +int extraId
-      +String name
-      +decimal price
+    class BeveragePrice {
+      -int beveragePriceId
+      -Beverage beverage
+      -Size size
+      -decimal price
       +getPrice() decimal
     }
 
-    Customer "0..1" --> "0..*" Order : places
+    class Extra {
+      -int extraId
+      -String name
+      -decimal price
+      +getPrice() decimal
+    }
+
+    Customer "1" --> "0..*" Order : places
+    Customer "1" o-- "0..*" LoyaltyTransaction : has
+    LoyaltyTransaction "*" --> "1" Order : for
+    Order "1" o-- "0..*" LoyaltyTransaction : generates
     CoffeeShop "1" o-- "0..*" Barista : employs
     CoffeeShop "1" o-- "0..*" Order : receives
     Barista "1" --> "0..*" Order : prepares
     Order "1" o-- "1..*" OrderItem : contains
     OrderItem "1" --> "1" Beverage : for
-    OrderItem "1" o-- "0..*" Extra : has
+    OrderItem "1" o-- "0..*" OrderItemExtra : has
+    OrderItemExtra "0..*" --> "1" Extra : extra
+    Beverage "1" o-- "1..*" BeveragePrice : has
 
-    Beverage <|-- Espresso
-    Beverage <|-- Latte
-    Beverage <|-- Cappuccino
+    Customer <|-- RegularCustomer
+    Customer <|-- GoldCustomer

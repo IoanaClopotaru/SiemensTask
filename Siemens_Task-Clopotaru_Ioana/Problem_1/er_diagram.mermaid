@@ -4,8 +4,12 @@ erDiagram
       string name
       string email
       string phone
-      string membership_type
-      int loyalty_points
+      string membership_type FK
+    }
+
+    MEMBERSHIP_TYPE {
+      string membership_type PK  "REGULAR|GOLD"
+      int points_multiplier
     }
 
     COFFEE_SHOP {
@@ -22,11 +26,14 @@ erDiagram
 
     BEVERAGE {
       int beverage_id PK
-      string name
-      string type
-      decimal price_small
-      decimal price_medium
-      decimal price_large
+      string beverage_name  "ESPRESSO|LATTE|CAPPUCCINO"
+    }
+
+    BEVERAGE_PRICE {
+      int beverage_price_id PK
+      int beverage_id FK
+      string size  "SMALL|MEDIUM|LARGE"
+      decimal price
     }
 
     EXTRA {
@@ -35,39 +42,59 @@ erDiagram
       decimal price
     }
 
-    "ORDER" {
+    ORDERS {
       int order_id PK
       int customer_id FK
       int shop_id FK
-      int barista_id FK
+      int barista_id FK  "nullable until assigned"
       datetime order_timestamp
-      decimal total_price
-      int loyalty_points_earned
-      int loyalty_points_redeemed
-      string status
+      string status  "PENDING|IN_PREPARATION|COMPLETED|CANCELLED"
+      decimal subtotal
+      decimal discount_amount
+      decimal final_total
     }
 
     ORDER_ITEM {
       int order_item_id PK
       int order_id FK
       int beverage_id FK
-      string size
+      string size  "SMALL|MEDIUM|LARGE"
       int quantity
-      decimal unit_price
-      decimal line_total
+      decimal unit_price_snapshot
+      decimal line_total_snapshot
     }
 
     ORDER_ITEM_EXTRA {
+      int order_item_extra_id PK
       int order_item_id FK
       int extra_id FK
-      decimal extra_price
+      int quantity
+      decimal unit_price_snapshot
+      decimal line_total_snapshot
     }
 
-    CUSTOMER ||--o{ "ORDER" : places
+    LOYALTY_TRANSACTION {
+      int transaction_id PK
+      int customer_id FK
+      int order_id FK
+      string transaction_type "EARNED|REDEEMED"
+      int points
+      datetime created_at
+    }
+
+    CUSTOMER ||--o{ ORDERS : places
     COFFEE_SHOP ||--o{ BARISTA : employs
-    COFFEE_SHOP ||--o{ "ORDER" : receives
-    BARISTA ||--o{ "ORDER" : prepares
-    "ORDER" ||--|{ ORDER_ITEM : contains
-    BEVERAGE ||--o{ ORDER_ITEM : used_for
+    COFFEE_SHOP ||--o{ ORDERS : receives
+    BARISTA ||--o{ ORDERS : prepares
+
+    ORDERS ||--|{ ORDER_ITEM : contains
+    BEVERAGE ||--o{ ORDER_ITEM : ordered_as
     ORDER_ITEM ||--o{ ORDER_ITEM_EXTRA : has
-    EXTRA ||--o{ ORDER_ITEM_EXTRA : used_in
+    EXTRA ||--o{ ORDER_ITEM_EXTRA : added_as
+
+    BEVERAGE ||--o{ BEVERAGE_PRICE : priced_by
+
+    CUSTOMER ||--o{ LOYALTY_TRANSACTION : has
+    ORDERS ||--o{ LOYALTY_TRANSACTION : generates
+
+    MEMBERSHIP_TYPE ||--o{ CUSTOMER : defines
