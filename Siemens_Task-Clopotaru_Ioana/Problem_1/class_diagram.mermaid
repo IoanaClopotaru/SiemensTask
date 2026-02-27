@@ -10,7 +10,7 @@ classDiagram
       +redeemPoints(points: int) void
       +getPointsPerEuro() int
     }
-    note for Customer "getLoyaltyPoints() = sum(EARNED) - sum(REDEEMED) from LoyaltyTransaction"
+    
     <<abstract>> Customer
 
     class RegularCustomer {
@@ -95,7 +95,6 @@ classDiagram
       -decimal unitPrice
       -decimal lineTotal
     }
-    note for OrderItemExtra "unitPrice/lineTotal = snapshot at order time"
 
     class Size {
     }
